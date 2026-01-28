@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroScan AI - 智能医学影像纵向诊断系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00d4aa;
+            --primary-dark: #00a88a;
+            --secondary: #6366f1;
+            --accent: #f59e0b;
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --border: rgba(255,255,255,0.08);
+            --glow: rgba(0, 212, 170, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            position: relative;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(0,212,170,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(99,102,241,0.1) 0%, transparent 40%),
+                var(--bg-dark);
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+        
+        .logo {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 50%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero .subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-badges {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .badge {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #000;
+        }
+        
+        .badge-outline {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn {
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #000;
+            border: none;
+            box-shadow: 0 10px 40px var(--glow);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px var(--glow);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--primary);
+        }
+        
+        /* Stats Section */
+        .stats {
+            padding: 80px 20px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+        
+        .stat-item h3 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .stat-item p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        /* Problem Section */
+        .section {
+            padding: 100px 20px;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .section-header p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .problem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 35px;
+            transition: all 0.3s ease;
+        }
+        
+        .problem-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(0,212,170,0.3);
+            transform: translateY(-5px);
+        }
+        
+        .problem-card .icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(99,102,241,0.1));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        .problem-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        
+        .problem-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        /* Solution Section */
+        .solution {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+        }
+        
+        .solution-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        
+        @media (max-width: 900px) {
+            .solution-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .solution-text h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        .solution-text p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+        
+        .feature-list {
+            list-style: none;
+        }
+        
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-list .check {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .solution-visual {
+            position: relative;
+        }
+        
+        .demo-preview {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+        
+        .demo-header {
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .demo-dot.red { background: #ff5f57; }
+        .demo-dot.yellow { background: #febc2e; }
+        .demo-dot.green { background: #28c840; }
+        
+        .demo-content {
+            padding: 30px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .demo-scan {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .scan-box {
+            background: #1a1a25;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .scan-box .label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .scan-placeholder {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(45deg, #222 25%, #2a2a35 25%, #2a2a35 50%, #222 50%, #222 75%, #2a2a35 75%);
+            background-size: 20px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+        
+        .demo-result {
+            background: rgba(0,212,170,0.1);
+            border: 1px solid rgba(0,212,170,0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .demo-result h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .demo-result p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Workflow Section */
+        .workflow {
+            background: var(--bg-card);
+        }
+        
+        .workflow-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .workflow-steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            right: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            z-index: 0;
+        }
+        
+        @media (max-width: 900px) {
+            .workflow-steps::before {
+                display: none;
+            }
+        }
+        
+        .workflow-step {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 20px;
+            color: var(--primary);
+        }
+        
+        .workflow-step h4 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .workflow-step p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Tech Stack */
+        .tech-stack {
+            background: var(--bg-dark);
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        
+        .tech-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .tech-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .tech-item .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .tech-item h4 {
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+        
+        .tech-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Pricing */
+        .pricing {
+            background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--primary);
+            box-shadow: 0 20px 60px var(--glow);
+        }
+        
+        .pricing-card.featured::before {
+            content: '推荐';
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: var(--primary);
+            color: #000;
+            padding: 5px 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transform: rotate(45deg);
+        }
+        
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .pricing-card .price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        
+        .pricing-card .price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+        
+        .pricing-card .desc {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+        
+        .pricing-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .pricing-features .check {
+            color: var(--primary);
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 120px 20px;
+            text-align: center;
+            background: 
+                radial-gradient(ellipse at 50% 100%, rgba(0,212,170,0.15) 0%, transparent 50%),
+                var(--bg-dark);
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 60px 20px 30px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 900px) {
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .footer-brand h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .footer-brand p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .footer-links h4 {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .section {
+                padding: 60px 20px;
+            }
+            
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="logo">
+            <div class="logo-icon">🏥</div>
+            NEUROSCAN AI
+        </div>
+        <h1>智能医学影像<br>纵向诊断系统</h1>
+        <p class="subtitle">
+            基于大模型的本地化医学影像分析平台，自动追踪病灶变化，智能生成诊断报告，让影像科医生效率提升 10 倍
+        </p>
+        <div class="hero-badges">
+            <span class="badge badge-primary">🔒 本地部署</span>
+            <span class="badge badge-outline">🤖 LLM 驱动</span>
+            <span class="badge badge-outline">📊 RECIST 1.1</span>
+            <span class="badge badge-outline">🏥 ACR 标准</span>
+        </div>
+        <div class="cta-buttons">
+            <a href="#demo" class="btn btn-primary">
+                🚀 立即体验 Demo
+            </a>
+            <a href="#contact" class="btn btn-secondary">
+                📞 商务合作
+            </a>
+        </div>
+    </section>
+    
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>10x</h3>
+                    <p>效率提升</p>
+                </div>
+                <div class="stat-item">
+                    <h3>3min</h3>
+                    <p>报告生成</p>
+                </div>
+                <div class="stat-item">
+                    <h3>104</h3>
+                    <p>器官识别</p>
+                </div>
+                <div class="stat-item">
+                    <h3>100%</h3>
+                    <p>数据本地化</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Problem Section -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>行业痛点</h2>
+                <p>传统医学影像分析面临的核心挑战</p>
+            </div>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="icon">⏰</div>
+                    <h3>效率低下</h3>
+                    <p>医生需要手动对比不同时期的影像，单个病例报告撰写耗时 30-60 分钟</p>
+                </div>
+                <div class="problem-card">
+                    <div class="icon">👁️</div>
+                    <h3>主观判断</h3>
+                    <p>病灶变化依赖医生主观判断，不同医生对同一病例可能得出不同结论</p>
+                </div>
+                <div class="problem-card">
+                    <div class="icon">🔓</div>
+                    <h3>数据安全</h3>
+                    <p>云端 AI 服务需要上传患者数据，存在隐私泄露和合规风险</p>
+                </div>
+                <div class="problem-card">
+                    <div class="icon">📉</div>
+                    <h3>标准化缺失</h3>
+                    <p>报告格式不统一，难以进行多中心研究和数据分析</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Solution Section -->
+    <section class="section solution" id="demo">
+        <div class="container">
+            <div class="section-header">
+                <h2>我们的解决方案</h2>
+                <p>端到端的智能医学影像分析平台</p>
+            </div>
+            <div class="solution-content">
+                <div class="solution-text">
+                    <h3>AI 驱动的纵向分析</h3>
+                    <p>NeuroScan AI 采用先进的深度学习和大语言模型技术，实现全自动的医学影像纵向分析。</p>
+                    <ul class="feature-list">
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>智能配准</strong><br>
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">自动对齐不同时期的 CT 扫描，精确到体素级别</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>变化检测</strong><br>
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">量化分析病灶体积、密度、形态变化</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>RECIST 评估</strong><br>
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">自动计算 RECIST 1.1 标准评估结果</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>智能报告</strong><br>
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">LLM 自动生成符合 ACR 标准的诊断报告</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="solution-visual">
+                    <div class="demo-preview floating">
+                        <div class="demo-header">
+                            <span class="demo-dot red"></span>
+                            <span class="demo-dot yellow"></span>
+                            <span class="demo-dot green"></span>
+                            <span style="margin-left: 15px; color: var(--text-secondary); font-size: 0.85rem;">NeuroScan AI - 纵向分析</span>
+                        </div>
+                        <div class="demo-content">
+                            <div class="demo-scan">
+                                <div class="scan-box">
+                                    <div class="label">基线扫描 (2025-10)</div>
+                                    <div class="scan-placeholder">🫁</div>
+                                </div>
+                                <div class="scan-box">
+                                    <div class="label">随访扫描 (2026-01)</div>
+                                    <div class="scan-placeholder">🫁</div>
+                                </div>
+                            </div>
+                            <div class="demo-result">
+                                <h4>🤖 AI 分析结果</h4>
+                                <p>右肺上叶结节：12.5mm (↑25%)，RECIST 评估：疾病进展 (PD)</p>
+                                <p style="margin-top: 8px;">建议：立即安排专家会诊，考虑活检...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Workflow Section -->
+    <section class="section workflow">
+        <div class="container">
+            <div class="section-header">
+                <h2>工作流程</h2>
+                <p>简单四步，完成全自动分析</p>
+            </div>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <h4>上传影像</h4>
+                    <p>支持 DICOM、NIfTI 格式，自动解析元数据</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <h4>智能处理</h4>
+                    <p>器官分割、图像配准、变化检测</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <h4>AI 分析</h4>
+                    <p>LLM 深度分析，RECIST 评估</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <h4>生成报告</h4>
+                    <p>ACR 标准格式，一键导出</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Tech Stack -->
+    <section class="section tech-stack">
+        <div class="container">
+            <div class="section-header">
+                <h2>技术栈</h2>
+                <p>基于业界领先的开源技术构建</p>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="icon">🧠</div>
+                    <h4>MONAI</h4>
+                    <p>医学影像 AI</p>
+                </div>
+                <div class="tech-item">
+                    <div class="icon">🔧</div>
+                    <h4>SimpleITK</h4>
+                    <p>图像配准</p>
+                </div>
+                <div class="tech-item">
+                    <div class="icon">🦙</div>
+                    <h4>LLaMA 3.1</h4>
+                    <p>报告生成</p>
+                </div>
+                <div class="tech-item">
+                    <div class="icon">🏥</div>
+                    <h4>Meditron</h4>
+                    <p>医学专用 LLM</p>
+                </div>
+                <div class="tech-item">
+                    <div class="icon">⚡</div>
+                    <h4>FastAPI</h4>
+                    <p>高性能后端</p>
+                </div>
+                <div class="tech-item">
+                    <div class="icon">🎨</div>
+                    <h4>Streamlit</h4>
+                    <p>交互界面</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Pricing -->
+    <section class="section pricing" id="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>合作模式</h2>
+                <p>灵活的商业模式，满足不同需求</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>🏥 医院部署</h3>
+                    <div class="price">¥50万<span>/年</span></div>
+                    <p class="desc">私有化部署，数据不出院</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> 完整功能授权</li>
+                        <li><span class="check">✓</span> 本地化部署</li>
+                        <li><span class="check">✓</span> 7×24 技术支持</li>
+                        <li><span class="check">✓</span> 定制化开发</li>
+                        <li><span class="check">✓</span> 培训服务</li>
+                    </ul>
+                    <a href="mailto:business@neuroscan.ai" class="btn btn-secondary" style="width: 100%; justify-content: center;">联系我们</a>
+                </div>
+                <div class="pricing-card featured">
+                    <h3>🏢 OEM 集成</h3>
+                    <div class="price">按量付费</div>
+                    <p class="desc">SDK 集成到您的产品</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> API/SDK 接入</li>
+                        <li><span class="check">✓</span> 按分析量计费</li>
+                        <li><span class="check">✓</span> 白标方案</li>
+                        <li><span class="check">✓</span> 技术对接支持</li>
+                        <li><span class="check">✓</span> SLA 保障</li>
+                    </ul>
+                    <a href="mailto:business@neuroscan.ai" class="btn btn-primary" style="width: 100%; justify-content: center;">立即合作</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>🎓 科研合作</h3>
+                    <div class="price">免费</div>
+                    <p class="desc">学术研究与联合开发</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> 学术授权</li>
+                        <li><span class="check">✓</span> 论文合作</li>
+                        <li><span class="check">✓</span> 数据集共享</li>
+                        <li><span class="check">✓</span> 技术交流</li>
+                        <li><span class="check">✓</span> 人才培养</li>
+                    </ul>
+                    <a href="mailto:research@neuroscan.ai" class="btn btn-secondary" style="width: 100%; justify-content: center;">申请合作</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>准备好革新您的影像科了吗？</h2>
+            <p>立即预约演示，体验 AI 如何改变医学影像分析</p>
+            <div class="cta-buttons">
+                <a href="mailto:business@neuroscan.ai" class="btn btn-primary">
+                    📧 预约演示
+                </a>
+                <a href="tel:400-XXX-XXXX" class="btn btn-secondary">
+                    📞 400-XXX-XXXX
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>🏥 NeuroScan AI</h3>
+                    <p>智能医学影像纵向诊断系统<br>让医学影像分析更智能、更高效、更安全</p>
+                </div>
+                <div class="footer-links">
+                    <h4>产品</h4>
+                    <ul>
+                        <li><a href="#">功能介绍</a></li>
+                        <li><a href="#">技术文档</a></li>
+                        <li><a href="#">API 接口</a></li>
+                        <li><a href="#">更新日志</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>公司</h4>
+                    <ul>
+                        <li><a href="#">关于我们</a></li>
+                        <li><a href="#">加入我们</a></li>
+                        <li><a href="#">新闻动态</a></li>
+                        <li><a href="#">联系方式</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>支持</h4>
+                    <ul>
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">常见问题</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                        <li><a href="#">服务条款</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024-2026 NeuroScan AI. All rights reserved. | 京ICP备XXXXXXXX号</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
