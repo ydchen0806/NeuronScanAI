@@ -72,6 +72,33 @@
 
 ---
 
+## 📥 Hugging Face 下载
+
+项目已上传到 Hugging Face Hub，可一键下载部署：
+
+```bash
+# 安装 huggingface_hub
+pip install huggingface_hub
+
+# 下载完整代码
+from huggingface_hub import snapshot_download
+snapshot_download(repo_id="cyd0806/neuroscan-ai", local_dir="./NeuroScan")
+
+# 下载模型权重
+snapshot_download(repo_id="cyd0806/neuroscan-ai-models", local_dir="./models")
+
+# 下载数据集
+snapshot_download(repo_id="cyd0806/neuroscan-ai-dataset", repo_type="dataset", local_dir="./data")
+```
+
+| 仓库 | 内容 | 链接 |
+|------|------|------|
+| 📦 代码 | 完整项目代码 | [cyd0806/neuroscan-ai](https://huggingface.co/cyd0806/neuroscan-ai) |
+| 🧠 模型 | MONAI 分割模型 | [cyd0806/neuroscan-ai-models](https://huggingface.co/cyd0806/neuroscan-ai-models) |
+| 📊 数据 | Learn2Reg 数据集 | [cyd0806/neuroscan-ai-dataset](https://huggingface.co/datasets/cyd0806/neuroscan-ai-dataset) |
+
+---
+
 ## 🚀 快速开始
 
 ### 环境要求
