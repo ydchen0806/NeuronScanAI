@@ -384,14 +384,14 @@ class ReportGenerator:
         # 计算间隔
         interval = self._calculate_interval(baseline_date, followup_date)
         
-        # 格式化测量数据
-        measurements = self._format_measurements(baseline_findings, followup_findings)
+        # 格式化测量数据（传入 change_results）
+        measurements = self._format_measurements(baseline_findings, followup_findings, change_results)
         
         # 格式化病灶变化
         lesion_changes = self._format_lesion_changes(baseline_findings, followup_findings, change_results)
         
-        # RECIST 评估
-        recist_assessment = self._format_recist_assessment(baseline_findings, followup_findings)
+        # RECIST 评估（传入 change_results）
+        recist_assessment = self._format_recist_assessment(baseline_findings, followup_findings, change_results)
         
         # 使用 LLM 分析配准结果
         registration_analysis = ""
@@ -478,13 +478,34 @@ class ReportGenerator:
     def _format_measurements(
         self,
         baseline_findings: List[Dict[str, Any]],
-        followup_findings: List[Dict[str, Any]]
+        followup_findings: List[Dict[str, Any]],
+        change_results: Dict[str, Any] = None
     ) -> str:
         """格式化测量数据对比"""
-        if not baseline_findings and not followup_findings:
-            return "无可测量病灶。"
-        
         text_parts = ["| 指标 | 基线 | 随访 | 变化 |", "|------|------|------|------|"]
+        
+        # 如果有 change_results，优先使用真实分析数据
+        if change_results and change_results.get("changed_voxels", 0) > 0:
+            changed_voxels = change_results.get("changed_voxels", 0)
+            total_voxels = change_results.get("total_voxels", 1)
+            change_percent = change_results.get("change_percent", 0)
+            changed_volume = change_results.get("changed_volume_cc", 0)
+            max_increase = change_results.get("max_hu_increase", 0)
+            max_decrease = change_results.get("max_hu_decrease", 0)
+            mean_change = change_results.get("mean_hu_change", 0)
+            
+            text_parts.append(f"| 变化体素数 | - | - | {changed_voxels:,} |")
+            text_parts.append(f"| 变化比例 | - | - | {change_percent:.2f}% |")
+            text_parts.append(f"| 变化体积 (cc) | - | - | {changed_volume:.2f} |")
+            text_parts.append(f"| 最大密度增加 (HU) | - | - | +{max_increase:.1f} |")
+            text_parts.append(f"| 最大密度减少 (HU) | - | - | {max_decrease:.1f} |")
+            text_parts.append(f"| 平均密度变化 (HU) | - | - | {mean_change:+.1f} |")
+            
+            return "\n".join(text_parts)
+        
+        # 如果没有 change_results，使用病灶数据
+        if not baseline_findings and not followup_findings:
+            return "无可测量病灶数据，请查看变化检测统计。"
         
         # 假设第一个病灶是目标病灶
         baseline = baseline_findings[0] if baseline_findings else {}
@@ -517,8 +538,42 @@ class ReportGenerator:
         change_results: Dict[str, Any]
     ) -> str:
         """格式化病灶变化描述"""
+        # 优先使用 change_results 中的真实数据
+        if change_results and change_results.get("changed_voxels", 0) > 0:
+            changed_voxels = change_results.get("changed_voxels", 0)
+            total_voxels = change_results.get("total_voxels", 1)
+            change_percent = change_results.get("change_percent", 0)
+            changed_volume = change_results.get("changed_volume_cc", 0)
+            max_increase = change_results.get("max_hu_increase", 0)
+            max_decrease = abs(change_results.get("max_hu_decrease", 0))
+            increase_percent = change_results.get("increase_percent", 0)
+            decrease_percent = change_results.get("decrease_percent", 0)
+            
+            # 根据变化情况判断趋势
+            if increase_percent > decrease_percent * 1.5:
+                trend = "密度增加为主"
+                trend_desc = "可能提示组织致密化或新发病变"
+            elif decrease_percent > increase_percent * 1.5:
+                trend = "密度减少为主"
+                trend_desc = "可能提示组织疏松化或病灶消退"
+            else:
+                trend = "双向变化"
+                trend_desc = "同时存在密度增加和减少区域"
+            
+            text = f"""
+**全局变化分析**:
+- 变化体素数: {changed_voxels:,} / {total_voxels:,} ({change_percent:.2f}%)
+- 变化体积: {changed_volume:.2f} cc
+- 密度增加区域: {increase_percent:.2f}% (最大 +{max_increase:.1f} HU)
+- 密度减少区域: {decrease_percent:.2f}% (最大 -{max_decrease:.1f} HU)
+- 变化趋势: **{trend}**
+- 临床意义: {trend_desc}
+"""
+            return text
+        
+        # 如果没有 change_results，使用病灶数据
         if not baseline_findings and not followup_findings:
-            return "无病灶变化记录。"
+            return "无病灶变化记录，请参考变化检测统计数据。"
         
         baseline = baseline_findings[0] if baseline_findings else {}
         followup = followup_findings[0] if followup_findings else {}
@@ -559,11 +614,57 @@ class ReportGenerator:
     def _format_recist_assessment(
         self,
         baseline_findings: List[Dict[str, Any]],
-        followup_findings: List[Dict[str, Any]]
+        followup_findings: List[Dict[str, Any]],
+        change_results: Dict[str, Any] = None
     ) -> str:
         """格式化 RECIST 1.1 评估"""
+        # 如果有 change_results，基于变化检测结果进行评估
+        if change_results and change_results.get("changed_voxels", 0) > 0:
+            change_percent = change_results.get("change_percent", 0)
+            increase_percent = change_results.get("increase_percent", 0)
+            decrease_percent = change_results.get("decrease_percent", 0)
+            
+            # 基于体积/密度变化进行 RECIST 类似评估
+            net_change = increase_percent - decrease_percent
+            
+            if change_percent < 1.0:
+                response = "SD (疾病稳定)"
+                description = "总体变化极小 (<1%)"
+                color = "🟢"
+            elif net_change > 10:
+                response = "PD (疾病进展)"
+                description = f"密度增加区域显著多于减少区域 (净变化 +{net_change:.1f}%)"
+                color = "🔴"
+            elif net_change < -10:
+                response = "PR (部分缓解)"
+                description = f"密度减少区域显著多于增加区域 (净变化 {net_change:.1f}%)"
+                color = "🟡"
+            else:
+                response = "SD (疾病稳定)"
+                description = f"变化区域相对平衡 (净变化 {net_change:+.1f}%)"
+                color = "🟠"
+            
+            text = f"""
+**RECIST 1.1 类似评估**: {color} **{response}**
+
+- 评估依据: {description}
+- 总变化比例: {change_percent:.2f}%
+- 密度增加区域: {increase_percent:.2f}%
+- 密度减少区域: {decrease_percent:.2f}%
+
+**注意**: 此评估基于体素级变化检测，非标准RECIST测量。标准RECIST需要测量靶病灶最大直径。
+
+**RECIST 1.1 标准参考**:
+- CR (完全缓解): 所有靶病灶消失
+- PR (部分缓解): 靶病灶径线和减少 ≥30%
+- SD (疾病稳定): 介于 PR 和 PD 之间
+- PD (疾病进展): 靶病灶径线和增加 ≥20% 或出现新病灶
+"""
+            return text
+        
+        # 使用病灶数据进行标准评估
         if not baseline_findings or not followup_findings:
-            return "无法进行 RECIST 评估 (缺少对比数据)。"
+            return "无法进行标准 RECIST 评估 (缺少靶病灶测量数据)。如有变化检测结果，请参考上方分析。"
         
         baseline = baseline_findings[0]
         followup = followup_findings[0]
@@ -671,8 +772,50 @@ class ReportGenerator:
         change_results: Dict[str, Any]
     ) -> str:
         """使用模板生成纵向对比诊断印象"""
+        # 优先使用 change_results 数据
+        if change_results and change_results.get("changed_voxels", 0) > 0:
+            change_percent = change_results.get("change_percent", 0)
+            changed_volume = change_results.get("changed_volume_cc", 0)
+            increase_percent = change_results.get("increase_percent", 0)
+            decrease_percent = change_results.get("decrease_percent", 0)
+            max_increase = change_results.get("max_hu_increase", 0)
+            max_decrease = abs(change_results.get("max_hu_decrease", 0))
+            
+            net_change = increase_percent - decrease_percent
+            
+            if change_percent < 1.0:
+                status = "基本稳定"
+                assessment = "SD (疾病稳定)"
+                recommendation = "继续当前方案或观察"
+            elif net_change > 10:
+                status = "密度增加为主的变化"
+                assessment = "可能提示病情进展"
+                recommendation = "建议进一步评估，必要时调整方案"
+            elif net_change < -10:
+                status = "密度减少为主的变化"
+                assessment = "可能提示病情改善"
+                recommendation = "继续当前治疗方案"
+            else:
+                status = "存在双向变化"
+                assessment = "需结合临床综合判断"
+                recommendation = "建议短期内复查"
+            
+            return f"""**纵向对比分析结论**:
+
+与前片对比，扫描区域呈现{status}。
+
+**定量分析**:
+- 总变化比例: {change_percent:.2f}%
+- 变化体积: {changed_volume:.2f} cc
+- 密度增加区域占比: {increase_percent:.2f}% (最大增加 +{max_increase:.1f} HU)
+- 密度减少区域占比: {decrease_percent:.2f}% (最大减少 -{max_decrease:.1f} HU)
+
+**评估**: {assessment}
+**建议**: {recommendation}"""
+        
+        # 使用病灶数据
         if not baseline_findings or not followup_findings:
-            return "对比数据不完整，无法生成诊断印象。"
+            return "对比数据不完整，请确保完成配准和变化检测分析。"
         
         baseline = baseline_findings[0]
         followup = followup_findings[0]
@@ -700,8 +843,55 @@ class ReportGenerator:
         change_results: Dict[str, Any]
     ) -> str:
         """使用模板生成纵向对比建议"""
+        # 优先使用 change_results 数据
+        if change_results and change_results.get("changed_voxels", 0) > 0:
+            change_percent = change_results.get("change_percent", 0)
+            increase_percent = change_results.get("increase_percent", 0)
+            decrease_percent = change_results.get("decrease_percent", 0)
+            net_change = increase_percent - decrease_percent
+            
+            if change_percent < 1.0:
+                return """**临床建议**:
+
+1. 病情稳定，可继续当前治疗方案或观察
+2. 建议 3 个月后复查 CT 评估
+3. 定期监测肿瘤标志物
+4. 如出现新症状请及时就诊
+5. 保持健康生活方式"""
+            elif net_change > 10:
+                return """**临床建议**:
+
+1. ⚠️ 建议多学科会诊 (MDT) 讨论
+2. 评估当前治疗方案有效性
+3. 考虑调整治疗策略或加强治疗
+4. 建议 4-6 周后短期复查
+5. 必要时行 PET-CT 或增强扫描
+6. 如有靶向治疗指征，建议基因检测"""
+            elif net_change < -10:
+                return """**临床建议**:
+
+1. ✅ 治疗效果良好，继续当前方案
+2. 建议 2-3 个月后复查评估
+3. 关注治疗相关副作用
+4. 定期监测肿瘤标志物
+5. 维持良好的营养状态和生活质量"""
+            else:
+                return """**临床建议**:
+
+1. 变化趋势不明确，建议密切随访
+2. 建议 6-8 周后短期复查
+3. 结合临床症状综合判断
+4. 必要时行增强 CT 或 PET-CT
+5. 定期监测肿瘤标志物
+6. 如症状加重请及时就诊"""
+        
+        # 使用病灶数据
         if not baseline_findings or not followup_findings:
-            return "1. 补充完整检查数据\n2. 重新进行对比分析"
+            return """**临床建议**:
+
+1. 完善检查数据，进行完整对比分析
+2. 如有疑问，建议临床医生综合判断
+3. 定期复查随访"""
         
         baseline = baseline_findings[0]
         followup = followup_findings[0]

@@ -861,42 +861,66 @@ def display_comparison_preview(baseline_info, followup_info):
 
 def render_upload_page():
     """Render data upload page"""
-    st.markdown("## 📤 Data Upload")
+    st.markdown("## 📤 数据上传")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
         st.markdown("""
-        <div class="metric-card">
-            <h4>📁 Upload Medical Images</h4>
-            <p style="color: #a0aec0;">Supports multiple formats. System will auto-detect and convert to standard format.</p>
+        <div style="background: linear-gradient(145deg, #1a2942 0%, #0d2137 100%); 
+                    padding: 1.5rem; border-radius: 16px; 
+                    border: 2px solid rgba(0, 163, 224, 0.3);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+            <h4 style="color: #00a3e0; margin-top: 0;">📁 上传医学影像</h4>
+            <p style="color: #e0e0e0; margin-bottom: 0;">支持多种格式，系统自动识别并转换为标准格式进行分析。</p>
         </div>
         """, unsafe_allow_html=True)
         
+        st.markdown("<br>", unsafe_allow_html=True)
+        
         # Select upload mode
         upload_mode = st.radio(
-            "Upload Mode",
-            ["Single Scan", "Longitudinal (Multiple Files)"],
+            "上传模式",
+            ["单次扫描", "纵向对比 (多文件)"],
             horizontal=True,
-            help="Select 'Longitudinal' to upload multiple scans (first is baseline, second is followup)"
+            help="选择「纵向对比」可上传多次扫描进行对比分析（第一个为基线，第二个为随访）"
         )
         
-        if upload_mode == "Single Scan":
+        if upload_mode == "单次扫描":
+            st.markdown("""
+            <div style="background: rgba(0, 163, 224, 0.1); padding: 1rem; border-radius: 12px; 
+                        border: 2px dashed rgba(0, 163, 224, 0.4); margin: 1rem 0;">
+            """, unsafe_allow_html=True)
             uploaded_file = st.file_uploader(
-                "Select Medical Image File",
+                "选择医学影像文件",
                 type=["zip", "tar", "gz", "nii", "nrrd", "mha", "mhd", "dcm"],
-                help="Supports: ZIP/TAR, NIfTI (.nii/.nii.gz), NRRD, MHA/MHD, DICOM (.dcm)"
+                help="支持格式: ZIP/TAR压缩包, NIfTI (.nii/.nii.gz), NRRD, MHA/MHD, DICOM (.dcm)"
             )
+            st.markdown("</div>", unsafe_allow_html=True)
             uploaded_files = [uploaded_file] if uploaded_file else []
         else:
-            st.markdown("##### 📁 Upload Multiple Scans for Comparison")
-            st.markdown("**Note**: Upload 2 or more files. The **first file** will be treated as **baseline**, the **second file** as **followup**.")
+            st.markdown("""
+            <div style="background: rgba(72, 187, 120, 0.1); padding: 1rem; border-radius: 12px; 
+                        border: 1px solid rgba(72, 187, 120, 0.3); margin: 0.5rem 0;">
+                <p style="color: #48bb78; margin: 0; font-weight: 600;">📊 纵向对比模式</p>
+                <p style="color: #e0e0e0; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                    上传 2 个文件：<strong>第一个</strong>为<span style="color: #3498db;">基线扫描</span>，
+                    <strong>第二个</strong>为<span style="color: #e74c3c;">随访扫描</span>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div style="background: rgba(0, 163, 224, 0.1); padding: 1rem; border-radius: 12px; 
+                        border: 2px dashed rgba(0, 163, 224, 0.4); margin: 1rem 0;">
+            """, unsafe_allow_html=True)
             uploaded_files_list = st.file_uploader(
-                "Select Medical Image Files (Multiple)",
+                "选择医学影像文件（可多选）",
                 type=["zip", "tar", "gz", "nii", "nrrd", "mha", "mhd", "dcm"],
                 accept_multiple_files=True,
-                help="Upload multiple files: first = baseline, second = followup"
+                help="上传多个文件: 第一个=基线, 第二个=随访"
             )
+            st.markdown("</div>", unsafe_allow_html=True)
             uploaded_files = []
             if uploaded_files_list:
                 if len(uploaded_files_list) >= 1:
@@ -906,10 +930,10 @@ def render_upload_page():
                 if len(uploaded_files_list) > 2:
                     st.warning(f"⚠️ Only the first 2 files will be used. {len(uploaded_files_list) - 2} additional file(s) ignored.")
         
-        patient_id = st.text_input("Patient ID (optional)", placeholder="e.g., P001")
+        patient_id = st.text_input("患者 ID（可选）", placeholder="例如: P001")
         
         # Show supported formats
-        with st.expander("📋 Supported File Formats", expanded=False):
+        with st.expander("📋 支持的文件格式", expanded=False):
             st.markdown("""
             | Format | Extension | Description |
             |--------|-----------|-------------|
@@ -922,7 +946,7 @@ def render_upload_page():
             """)
         
         # Process uploaded files
-        if upload_mode == "Single Scan":
+        if upload_mode == "单次扫描":
             # Single file upload mode
             if uploaded_files and uploaded_files[0] is not None:
                 uploaded_file = uploaded_files[0]
@@ -1330,21 +1354,196 @@ def render_longitudinal_page():
 
 
 def render_report_page():
-    """Render report generation page"""
-    st.markdown("## 📋 Diagnostic Report")
+    """Render report generation page with AI chat"""
+    st.markdown("## 📋 智能诊断报告 & AI 咨询")
     
     if not st.session_state.scans:
-        st.warning("⚠️ Please upload and analyze data first")
+        st.warning("⚠️ 请先上传并分析数据")
         return
     
+    # 创建两个标签页：报告生成 和 AI咨询
+    tab1, tab2 = st.tabs(["📝 报告生成", "💬 AI 医学咨询"])
+    
+    with tab1:
+        render_report_tab()
+    
+    with tab2:
+        render_chat_tab()
+
+
+def render_chat_tab():
+    """渲染AI聊天咨询标签页"""
+    st.markdown("### 💬 AI 医学影像咨询助手")
+    
+    st.markdown("""
+    <div style="background: linear-gradient(145deg, #1a2942 0%, #0d2137 100%); 
+                padding: 1rem; border-radius: 12px; border: 1px solid rgba(0, 163, 224, 0.3); margin-bottom: 1rem;">
+        <p style="color: #a0aec0; margin: 0;">
+            🤖 基于本地部署的 LLM (Ollama) 提供医学影像分析咨询。您可以询问关于影像发现、病情解读、治疗建议等问题。
+        </p>
+        <p style="color: #ff6b35; font-size: 0.85rem; margin: 0.5rem 0 0 0;">
+            ⚠️ 免责声明：AI 建议仅供参考，不能替代专业医生的诊断和治疗意见。
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 初始化聊天历史
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+    
+    # 显示当前分析上下文
+    if hasattr(st.session_state, 'change_results') and st.session_state.change_results:
+        with st.expander("📊 当前分析数据（AI 将基于此数据回答）", expanded=False):
+            st.json(st.session_state.change_results)
+    
+    # 显示聊天历史
+    chat_container = st.container()
+    with chat_container:
+        for msg in st.session_state.chat_messages:
+            if msg["role"] == "user":
+                st.markdown(f"""
+                <div style="background: rgba(0, 102, 204, 0.2); padding: 0.75rem 1rem; 
+                            border-radius: 12px; margin: 0.5rem 0; border-left: 3px solid #0066cc;">
+                    <strong style="color: #00a3e0;">🧑 您:</strong> {msg["content"]}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="background: rgba(72, 187, 120, 0.15); padding: 0.75rem 1rem; 
+                            border-radius: 12px; margin: 0.5rem 0; border-left: 3px solid #48bb78;">
+                    <strong style="color: #48bb78;">🤖 AI 助手:</strong>
+                    <div style="margin-top: 0.5rem; color: #e0e0e0; line-height: 1.6;">{msg["content"]}</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # 快捷问题按钮
+    st.markdown("#### 💡 快捷问题")
+    col1, col2, col3 = st.columns(3)
+    
+    quick_questions = [
+        ("这个变化是好还是坏？", col1),
+        ("需要做什么进一步检查？", col2),
+        ("治疗方案有哪些选择？", col3),
+    ]
+    
+    for question, col in quick_questions:
+        with col:
+            if st.button(question, use_container_width=True, key=f"quick_{question}"):
+                process_chat_message(question)
+                st.rerun()
+    
+    col1, col2, col3 = st.columns(3)
+    quick_questions_2 = [
+        ("用药有什么注意事项？", col1),
+        ("多久需要复查？", col2),
+        ("日常生活需要注意什么？", col3),
+    ]
+    
+    for question, col in quick_questions_2:
+        with col:
+            if st.button(question, use_container_width=True, key=f"quick2_{question}"):
+                process_chat_message(question)
+                st.rerun()
+    
+    # 用户输入
+    st.markdown("#### ✏️ 自定义问题")
+    user_input = st.text_input(
+        "输入您的问题",
+        placeholder="例如：这个病灶是良性还是恶性的可能性更大？",
+        key="chat_input"
+    )
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        if st.button("🚀 发送", use_container_width=True):
+            if user_input.strip():
+                process_chat_message(user_input)
+                st.rerun()
+    with col2:
+        if st.button("🗑️ 清空对话", use_container_width=True):
+            st.session_state.chat_messages = []
+            st.rerun()
+
+
+def process_chat_message(user_message: str):
+    """处理聊天消息"""
+    # 添加用户消息
+    st.session_state.chat_messages.append({
+        "role": "user",
+        "content": user_message
+    })
+    
+    # 构建上下文
+    context = ""
+    if hasattr(st.session_state, 'change_results') and st.session_state.change_results:
+        cr = st.session_state.change_results
+        context = f"""
+当前影像分析数据：
+- 变化体素数: {cr.get('changed_voxels', 0):,}
+- 变化比例: {cr.get('change_percent', 0):.2f}%
+- 变化体积: {cr.get('changed_volume_cc', 0):.2f} cc
+- 最大密度增加: {cr.get('max_hu_increase', 0):.1f} HU
+- 最大密度减少: {cr.get('max_hu_decrease', 0):.1f} HU
+- 密度增加区域: {cr.get('increase_percent', 0):.2f}%
+- 密度减少区域: {cr.get('decrease_percent', 0):.2f}%
+"""
+    
+    # 调用 LLM
+    try:
+        import ollama
+        
+        system_prompt = f"""你是一名经验丰富的放射科医生和肿瘤科医生。你正在帮助患者或其家属理解医学影像分析结果。
+
+{context}
+
+回答要求：
+1. 使用通俗易懂的语言，避免过多专业术语
+2. 如果使用专业术语，请给出解释
+3. 回答要客观、准确、有同理心
+4. 始终提醒患者最终诊断需要专业医生判断
+5. 如果问题超出影像分析范围，请诚实说明
+6. 回答应该简洁但完整，控制在200字以内"""
+        
+        response = ollama.chat(
+            model="llama3.1:8b",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        
+        ai_response = response.message.content
+        
+    except Exception as e:
+        ai_response = f"""抱歉，AI 助手暂时无法响应。
+
+可能的原因：
+- Ollama 服务未启动
+- 网络连接问题
+
+您的问题是："{user_message}"
+
+建议：请将此问题咨询您的主治医生。
+
+技术信息：{str(e)[:100]}"""
+    
+    # 添加 AI 回复
+    st.session_state.chat_messages.append({
+        "role": "assistant",
+        "content": ai_response
+    })
+
+
+def render_report_tab():
+    """渲染报告生成标签页"""
     # Select report type
     report_type = st.radio(
-        "Report Type",
-        ["Single Exam Report", "Longitudinal Report"],
+        "报告类型",
+        ["单次检查报告", "纵向对比报告"],
         horizontal=True
     )
     
-    if report_type == "Single Exam Report":
+    if report_type == "单次检查报告":
         scan_options = list(st.session_state.scans.keys())
         selected_scan = st.selectbox(
             "Select scan",
@@ -1421,9 +1620,9 @@ No significant osseous abnormalities identified.
                     mime="text/markdown"
                 )
     
-    else:  # Longitudinal Report
+    else:  # 纵向对比报告
         if not hasattr(st.session_state, 'diff_map') or st.session_state.diff_map is None:
-            st.warning("⚠️ 请先进行纵向对比分析")
+            st.warning("⚠️ 请先进行纵向对比分析（在「纵向对比」页面完成）")
             return
         
         # Get scan IDs from session state
