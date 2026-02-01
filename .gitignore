@@ -31,7 +31,7 @@ wheels/
 # ==========================================
 venv/
 ENV/
-env/
+#env/
 .venv/
 .conda/
 
@@ -129,3 +129,7 @@ desktop.ini
 *.temp
 *.bak
 *.backup
+# 离线安装包（太大，不上传）
+env/packages/
+env/packages/
+env/venv/
