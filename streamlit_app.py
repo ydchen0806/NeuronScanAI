@@ -653,6 +653,211 @@ def create_3d_visualization(segmentation: np.ndarray, organ_labels: dict):
     return fig
 
 
+# ============ One-Click Demo ============
+
+def render_demo_page():
+    """一键Demo：自动展示完整纵向分析流程"""
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #0066cc 0%, #00a3e0 50%, #0d2137 100%);
+                padding: 2rem; border-radius: 16px; margin-bottom: 2rem; text-align: center;">
+        <h2 style="color: white; margin: 0;">🎯 NeuroScan AI 智能诊断演示</h2>
+        <p style="color: #a0d4ff; margin-top: 0.5rem;">真实肺癌CT纵向随访分析 · 全自动AI工作流</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 查找Demo病例
+    demo_dir = settings.PROCESSED_DATA_DIR / "demo_cases"
+    demo_cases = []
+    
+    if demo_dir.exists():
+        for case_dir in sorted(demo_dir.iterdir()):
+            meta_file = case_dir / "metadata.json"
+            if meta_file.exists():
+                with open(meta_file, 'r', encoding='utf-8') as f:
+                    meta = json.load(f)
+                meta["path"] = case_dir
+                demo_cases.append(meta)
+    
+    if not demo_cases:
+        st.warning("⚠️ 未找到Demo数据。请运行: `python scripts/generate_demo_data.py`")
+        return
+    
+    # 病例选择卡片
+    st.markdown("### 📋 选择真实临床病例")
+    
+    cols = st.columns(len(demo_cases))
+    for i, (col, case) in enumerate(zip(cols, demo_cases)):
+        with col:
+            change_type = case.get("tumor_info", {}).get("change_type", "unknown")
+            emoji = "🔴" if change_type == "grow" else "🟢" if change_type == "shrink" else "🟡"
+            label = "进展" if change_type == "grow" else "缓解" if change_type == "shrink" else "稳定"
+            
+            st.markdown(f"""
+            <div style="background: linear-gradient(145deg, #1a2942, #0d2137); padding: 1rem;
+                        border-radius: 12px; border: 1px solid rgba(0,163,224,0.3); text-align: center;">
+                <h4 style="color: #00a3e0; margin: 0;">{emoji} {case['patient_id']}</h4>
+                <p style="color: #e0e0e0; font-size: 0.85rem; margin: 0.5rem 0;">{case['scenario']}</p>
+                <p style="color: #a0aec0; font-size: 0.8rem; margin: 0;">
+                    {case['patient_name']} · {case['age']}岁{case['gender']} · 肿瘤 {case.get('tumor_info',{}).get('volume_cc','?')} cc
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    selected_idx = st.selectbox(
+        "选择病例",
+        range(len(demo_cases)),
+        format_func=lambda i: f"{demo_cases[i]['patient_id']} - {demo_cases[i]['scenario']}"
+    )
+    
+    selected = demo_cases[selected_idx]
+    case_path = selected["path"]
+    
+    # 展示临床信息
+    with st.expander("📋 临床信息", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"**患者**: {selected['patient_name']} ({selected['age']}岁, {selected['gender']})")
+            st.markdown(f"**基线日期**: {selected['baseline_date']}")
+            st.markdown(f"**随访日期**: {selected['followup_date']}")
+        with col2:
+            st.markdown(f"**数据来源**: TCIA (CC-BY-SA 4.0)")
+            st.markdown(f"**图像尺寸**: {selected.get('image_shape', 'N/A')}")
+            st.markdown(f"**体素间距**: {selected.get('voxel_spacing_mm', 'N/A')} mm")
+        st.markdown(f"**病史**: {selected['clinical_history']}")
+    
+    # 一键运行
+    if st.button("🚀 开始全自动分析", use_container_width=True, type="primary"):
+        baseline_path = case_path / "baseline.nii.gz"
+        followup_path = case_path / "followup.nii.gz"
+        
+        if not baseline_path.exists() or not followup_path.exists():
+            st.error("❌ 数据文件不存在")
+            return
+        
+        # ====== Step 1: 数据加载 ======
+        progress = st.progress(0, text="📁 Step 1/4: 加载医学影像数据...")
+        
+        loader = get_dicom_loader()
+        baseline_data, baseline_img = loader.load_nifti(baseline_path)
+        followup_data, followup_img = loader.load_nifti(followup_path)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("基线尺寸", f"{baseline_data.shape[0]}×{baseline_data.shape[1]}×{baseline_data.shape[2]}")
+        with col2:
+            st.metric("随访尺寸", f"{followup_data.shape[0]}×{followup_data.shape[1]}×{followup_data.shape[2]}")
+        with col3:
+            spacing = baseline_img.header.get_zooms()[:3]
+            st.metric("体素间距", f"{spacing[0]:.2f}×{spacing[1]:.2f}×{spacing[2]:.2f} mm")
+        
+        # 展示切面对比
+        st.markdown("#### 📷 基线 vs 随访")
+        mid_z = baseline_data.shape[2] // 2
+        
+        fig, axes = plt.subplots(1, 2, figsize=(14, 6), facecolor='#0a1628')
+        for ax in axes:
+            ax.set_facecolor('#0a1628')
+        
+        vmin, vmax = -1000, 400
+        axes[0].imshow(baseline_data[:, :, mid_z].T, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+        axes[0].set_title('Baseline', color='white', fontsize=14, fontweight='bold')
+        axes[0].axis('off')
+        axes[1].imshow(followup_data[:, :, mid_z].T, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+        axes[1].set_title('Follow-up', color='white', fontsize=14, fontweight='bold')
+        axes[1].axis('off')
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+        
+        progress.progress(25, text="✅ 数据加载完成")
+        
+        # ====== Step 2: 配准 ======
+        progress.progress(30, text="🔄 Step 2/4: 两级图像配准（刚性 + 非刚性）...")
+        
+        registrator = get_registrator()
+        reg_result = registrator.register(followup_data, baseline_data, use_deformable=True)
+        warped_data = reg_result["warped_image"]
+        
+        st.success(f"✅ 配准完成！耗时: {reg_result.get('elapsed_time', 'N/A')}s")
+        progress.progress(55, text="✅ 图像配准完成")
+        
+        # ====== Step 3: 变化检测 ======
+        progress.progress(60, text="📈 Step 3/4: 体素级变化检测...")
+        
+        detector = get_change_detector()
+        diff_map, significant = detector.compute_difference_map(followup_data, warped_data)
+        followup_spacing = tuple(followup_img.header.get_zooms()[:3])
+        changes = detector.quantify_changes(diff_map, significant, spacing=followup_spacing)
+        
+        # 变化统计
+        st.markdown("#### 📊 变化检测结果")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("变化体素", f"{changes.get('changed_voxels', 0):,}")
+        with col2:
+            st.metric("变化比例", f"{changes.get('change_percent', 0):.2f}%")
+        with col3:
+            st.metric("最大增加", f"+{changes.get('max_hu_increase', 0):.0f} HU")
+        with col4:
+            st.metric("最大减少", f"{changes.get('max_hu_decrease', 0):.0f} HU")
+        
+        # 热力图
+        st.markdown("#### 🔥 变化热力图")
+        fig = render_diff_heatmap(followup_data, significant, mid_z, "axial")
+        st.pyplot(fig)
+        plt.close()
+        
+        progress.progress(80, text="✅ 变化检测完成")
+        
+        # ====== Step 4: 报告生成 ======
+        progress.progress(85, text="📋 Step 4/4: AI 智能报告生成...")
+        
+        from app.services.report import ReportGenerator
+        try:
+            generator = ReportGenerator(llm_backend="ollama")
+        except:
+            generator = ReportGenerator(llm_backend="template")
+        
+        report = generator.generate_longitudinal_report(
+            patient_id=selected['patient_id'],
+            baseline_date=selected['baseline_date'],
+            followup_date=selected['followup_date'],
+            baseline_findings=[],
+            followup_findings=[],
+            registration_results={"rigid": "completed", "deformable": "completed"},
+            change_results=changes,
+            modality="CT"
+        )
+        
+        progress.progress(100, text="🎉 分析完成！")
+        
+        # 展示报告
+        st.markdown("#### 📋 AI 诊断报告")
+        st.markdown("""
+        <div style="background: linear-gradient(145deg, #1a2942, #0d2137); padding: 2rem;
+                    border-radius: 16px; border: 2px solid #00a3e0;">
+        """, unsafe_allow_html=True)
+        st.markdown(report)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # 下载按钮
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                "📥 下载报告 (Markdown)", report,
+                f"report_{selected['patient_id']}.md", "text/markdown",
+                use_container_width=True
+            )
+        with col2:
+            st.download_button(
+                "📥 下载报告 (文本)", report,
+                f"report_{selected['patient_id']}.txt", "text/plain",
+                use_container_width=True
+            )
+        
+        st.balloons()
+
+
 # ============ Main Interface ============
 
 def main():
@@ -669,7 +874,7 @@ def main():
         # Mode selection
         mode = st.radio(
             "选择模式",
-            ["📤 数据上传", "🔬 单次分析", "📊 纵向对比", "📋 诊断报告", "📁 示例数据"],
+            ["🎯 一键Demo", "📤 数据上传", "🔬 单次分析", "📊 纵向对比", "📋 诊断报告", "📁 示例数据"],
             index=0
         )
         
@@ -719,7 +924,9 @@ def main():
         st.session_state.segmentation = None
     
     # Main content area
-    if mode == "📤 数据上传":
+    if mode == "🎯 一键Demo":
+        render_demo_page()
+    elif mode == "📤 数据上传":
         render_upload_page()
     elif mode == "🔬 单次分析":
         render_single_analysis_page()
